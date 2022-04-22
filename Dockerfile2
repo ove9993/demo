@@ -1,0 +1,202 @@
+MICROSERVICE DOCKER CREATION AND RUN INSTRUCTIONS
+For projext release 4.1 require below mention additional steps
+
+Kindly note there are 4 new added items for this deployment -
+
+authorization-app
+logback-http-appender
+logstash-logback-encoder
+PostgreSQL
+1.Authorization app
+
+git clone https://github.com/SQ-ONE/authorization-app.git cd authorizationapp git checkout IFRM-482
+
+sudo mv ifrm-audit-log.conf.example ifrm-audit-log.conf (change file) sudo nano ifrm-audit-log.conf add pidfile.path="/dev/null"
+
+sudo nano build.sbt (create docker image add below lines)
+
+.enablePlugins(JavaAppPackaging) .enablePlugins(DockerPlugin)
+
+sbt docker:publishLocal
+
+sudo cp ifrm-audit-log.conf.example /target/docker/stage sudo nano Dockerfile (edit file from release dockerfile folder)
+
+cd target/docker/stage docker build -f Dockerfile -t ifrm_authorization:4.1
+
+to run docker authorization app docker run --network="host" --name ifrm_authorization --rm ifrm_authorization:4.1
+
+logback-http-appender Clone the repo - https://github.com/SQ-ONE/logback-http-appender
+
+git clone https://github.com/SQ-ONE/logback-http-appender
+Build and publish the above repo locally: mvn clean compile install
+
+logstash-logback-encoder Clone the repo - https://github.com/SQ-ONE/logstash-logback-encoder 
+
+git clone https://github.com/SQ-ONE/logstash-logback-encoder
+Build and publish the above repo locally: mvn clean compile install
+
+Note:-if dont have internet acess then run 2 & 3 steps on another machine
+
+copied net and tw folder from .m2 of the machine create .m2 flder in machine and paste the flder
+
+git clone https://github.com/SQ-ONE/ifrm-api
+Checkout right Release v0.2
+2.rename below files
+
+mv ifrm.prod.conf.example ifrm.prod.conf
+
+mv ifrm.conf.example ifrm.conf
+
+Edit files add line to last row pidfile.path=/dev/null
+
+nano ifrm.pros.conf
+
+nano ifrm.conf
+
+Modify ifrm-api/build.sbt
+Need to add the following lines in ifrm-common instruction section before .setting:
+
+.enablePlugins(LagomScala)
+.enablePlugins(JavaAppPackaging)
+.enablePlugins(DockerPlugin)
+
+Modify plugin.sbt in ifrm-api/project directory
+Need to add the following plugins:
+
+addSbtPlugin("com.lightbend.lagom" % "lagom-sbt-plugin" % "1.5.1")
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.4")
+
+In irm-api run command
+sbt docker:publishLocal logom
+
+For lagom conul module not found download files
+
+git clone https://github.com/jboner/lagom-service-locator-consul
+
+cd lagom-service-locator-consul
+
+nano build.sbt change parameter
+
+replace file with below mention link contetent
+
+https://github.com/SQ-ONE/deployment/edit/master/releases/Release8.1/log_file/lagom_sbt_build
+
+sbt publishLocal
+
+once task completed
+
+create folder etc/bankiq/config/ifrm/ and put both file(ifrm.conf or ifrm.prod.conf) in it
+
+again
+
+cd ifrm-api
+
+sbt compile
+
+if task not complted sucess
+
+go to docker_5_create_dockerfile_three_server.md and see at the end there are 4 step, follow those steps first then again and again come and
+
+run sbt compile
+
+if task completed sucessfully
+
+again run
+
+sbt docker:publishLocal
+
+For each Microservice
+fatable jar file created and also default docker file created modfied docker file as per the process(as per microservice)
+
+copy ifrm.prod.conf file to each dockerfile location
+eg. for auth
+
+sudo cp ifrm.prod.conf /ifrm-api/ifrm-auth-impl/target/docker/stage
+
+also redit the Dockerfile in the location from each microservice
+eg. for auth
+
+cd /ifrm-api/ifrm-auth-impl/target/docker/stage
+
+nano Dockerfile
+
+add the content from respective docker release
+
+Complete Docker build for each microservice
+command to build
+
+docker build -f Dockerfile -t iamge_name:tag .
+
+eg.
+
+for auth
+
+docker build -f Dockerfile -t ifrm_auth: .
+
+10.to run docker for eachmicroservice
+
+docker run --network="host" --rm image_name:tag
+
+eg.
+
+For Auth
+
+docker run -t -i -d --network="host" --rm ifrm_auth:2.1
+
+For Log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_audit ifrm_audit:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_user ifrm_user_access:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_case ifrm_case:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_customer ifrm_customer:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_investigation ifrm_investigation:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_transaction ifrm_transaction:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_screener ifrm_screener:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_card ifrm_card:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_upi_cognitive ifrm_upi_cognitive:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_upi_rule ifrm_upi_rule:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_atm_cognitive ifrm_atm_cognitive:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_atm_rule ifrm_atm_rule:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_pos_rule ifrm_pos_rule:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_pos_cognitive ifrm_pos_cognitive:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_ecom_rule ifrm_ecom_rule:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_ecom_cognitive ifrm_ecom_cognitive:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_audit ifrm_audit:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_ibmb_rule ifrm_ibmb_rule:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_ibmb_cognitive ifrm_ibmb_cognitive:log
+
+docker run -t -i -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_universal_rule ifrm_universal_rule:poc1
+
+docker run -t -i -d --network host -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_prefilter ifrm_prefilter:new
+
+docker run -t -i -d --network host -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm_service ifrm_service:new
+
+============================================================================================================================ docker run
+
+docker run -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm-atm-cognitive-services --rm ifrm-atm-cognitive-services:tag
+
+docker run -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm-pos-cognitive-services --rm ifrm-pos-cognitive-services:tag
+
+docker run -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm-ecom-cognitive-services --rm ifrm-ecom-cognitive-services:tag
+
+docker run -d --network="host" -v /var/log/bankiq/ifrm:/var/log/bankiq/ifrm --name ifrm-ibmb-cognitive-services --rm ifrm-ibmb-cognitive-services:tag
+
+

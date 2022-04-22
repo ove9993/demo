@@ -1,0 +1,10 @@
+docker pull postgres
+docker tag postgres ifrm_postgres
+mkdir -p $HOME/volume 
+ cd volume 
+ mkdir postgres
+ mkdir cassandras
+ docker run -t -i -d --network="host" -v $HOME/volume/postgress/:/var/lib/postgresql/data --name ifrm_postgres ifrm_postgres:latest
+ [Container ID:- f97f7199ed2c0951fb6886e795327de38af6fba60f69ba0b12cb9b07f39997ce] Image Name:- ifrm_postgres:latest 
+ docker ps -a
+ docker exec -it ifrm_postgress /bin/bash ( docker exec -it ifrm_postgres:latest /bin/bash)
